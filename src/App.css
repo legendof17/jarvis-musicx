@@ -1,9 +1,10 @@
 .App {
+  background: linear-gradient(rgba(0, 0, 0, 0.35), rgba(63, 39, 39, 0.35)),
+    url("./pages/page\ elements/bg.jpg") no-repeat center center / cover;
   text-align: center;
 }
 
-.App-header {
-  background-color: #282c34;
+.Home {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
