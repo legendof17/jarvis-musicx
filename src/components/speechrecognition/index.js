@@ -2,7 +2,12 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 
-const SpeechRecog = (getSongUrl, resumePlayedSong, stopPlayingSong) => {
+const SpeechRecog = (
+  getSongUrl,
+  resumePlayedSong,
+  stopPlayingSong,
+  turnOffMic
+) => {
   const commands = [
     {
       command: ["Jarvis play *"],
@@ -26,13 +31,17 @@ const SpeechRecog = (getSongUrl, resumePlayedSong, stopPlayingSong) => {
         stopPlayingSong();
       },
     },
+    {
+      command: ["turn off mic"],
+      callback: () => turnOffMic(),
+    },
   ];
 
-  const { transcript, resetTranscript } = useSpeechRecognition({
+  const { transcript, listening, resetTranscript } = useSpeechRecognition({
     commands,
     clearTranscriptOnListen: true,
   });
-  return { SpeechRecognition, transcript, resetTranscript };
+  return { SpeechRecognition, transcript, listening, resetTranscript };
 };
 
 export default SpeechRecog;
