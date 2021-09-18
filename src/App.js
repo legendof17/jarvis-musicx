@@ -5,10 +5,10 @@ import Home from "./pages/home";
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Hello World</h1>
+      <div className="Home">
+        <h1>Jarvis - MusicX</h1>
         <Home />
-      </header>
+      </div>
     </div>
   );
 }
