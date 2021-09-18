@@ -16,7 +16,7 @@ const songfetcher = (songname) => {
     let bigCoverImage = "";
     try {
       songId = resData.id;
-      songTitle = resData.title;
+      songTitle = resData.title.replace("&amp;", "&").replace("&quot;", '"');
       coverImage = resData.image.replace("50x50", "250x250");
       bigCoverImage = resData.image.replace("50x50", "500x500");
     } catch (error) {
