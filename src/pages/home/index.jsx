@@ -1,14 +1,28 @@
 import { useState, useEffect, useRef } from "react";
 import songfetcher from "../../api/songfetcher";
 import SpeechRecog from "../../components/speechrecognition";
+import Typical from "react-typical";
+import micon from "../page elements/mic_on.png";
+import micoff from "../page elements/mic_off.png";
+import { useLongPress } from "react-use";
 
 const Home = () => {
   const [songData, setSongData] = useState("");
+  const [showSongDetails, setShowSongDetails] = useState(false);
+  const [startListening, setStartListening] = useState(false);
+  const [longPressed, setLongPressed] = useState(false);
   const audio = useRef(new Audio());
 
   useEffect(() => {
     if (Object.keys(songData).length > 0) {
       console.log(songData);
+      setShowSongDetails(true);
+      const ele = document.getElementsByClassName("App")[0].style;
+      ele.backgroundImage = `linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)),url(${songData.big_cover_image})`;
+      ele.backgroundRepeat = "no-repeat";
+      ele.backgroundAttachment = "fixed";
+      ele.backgroundPosition = "center";
+      ele.backgroundSize = "cover";
       if (audio.current.src !== songData.url) {
         audio.current.src = songData.url;
       }
@@ -18,6 +32,7 @@ const Home = () => {
 
   const getResults = async (songName) => {
     if (songName) {
+      setShowSongDetails(false);
       const {
         songId,
         artistNames,
@@ -63,43 +78,81 @@ const Home = () => {
 
   const stopPlayingSong = () => {
     if (!audio.current.paused) audio.current.pause();
+    setShowSongDetails(false);
     resetTranscript();
   };
 
-  const { SpeechRecognition, transcript, resetTranscript } = SpeechRecog(
-    getResults,
-    resumePlayedSong,
-    stopPlayingSong
-  );
+  const turnOffMic = () => {
+    SpeechRecognition.stopListening();
+    setStartListening(false);
+    resetTranscript();
+  };
+
+  const { SpeechRecognition, transcript, listening, resetTranscript } =
+    SpeechRecog(getResults, resumePlayedSong, stopPlayingSong, turnOffMic);
 
   useEffect(() => {
-    if (transcript.length > 0) setTimeout(() => resetTranscript(), 1000 * 6);
+    if (startListening) setTimeout(() => resetTranscript(), 1000 * 5);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transcript]);
+  }, [startListening]);
+
+  useEffect(() => {
+    if (!listening) setStartListening(false);
+  }, [listening]);
 
   return (
     <div>
-      <h1>Home Page</h1>
-      {Object.keys(songData).length > 0 ? (
-        songData.url.length > 0 ? (
+      {Object.keys(songData).length > 0 &&
+        showSongDetails &&
+        songData.url.length > 0 && (
           <div className="songdetails">
             <h4>{songData.title}</h4>
-            <h5>{songData.artist}</h5>
+            <h6>-- {songData.artist} --</h6>
           </div>
-        ) : null
-      ) : null}
-      <p>Transcript: {transcript}</p>
-      <button onClick={SpeechRecognition.startListening}>Start</button>{" "}
+        )}
+      {transcript.length > 0 && (
+        <div
+          style={{ backgroundColor: "rgba(0,200,0,0.05)" }}
+          onClick={resetTranscript}
+        >
+          <Typical steps={[transcript, 500]} wrapper="p" />
+        </div>
+      )}
       <button
-        onClick={() => {
-          SpeechRecognition.startListening({ continuous: true });
+        style={{
+          background: !startListening
+            ? "rgba(220,0,0,0.40)"
+            : "rgba(0,220,0,0.25)",
+          border: "1px solid black",
+          borderRadius: "50%",
+          width: "65px",
+          height: "65px",
+          position: "absolute",
+          right: "30px",
+          bottom: "20px",
         }}
+        onClick={() => {
+          if (!longPressed) {
+            if (!startListening) {
+              SpeechRecognition.startListening();
+              setStartListening(true);
+            } else {
+              SpeechRecognition.stopListening();
+              setStartListening(false);
+            }
+          }
+        }}
+        {...useLongPress(() => {
+          SpeechRecognition.startListening({ continuous: true });
+          setLongPressed(true);
+          setStartListening(true);
+          setTimeout(() => {
+            setLongPressed(false);
+          }, 1000);
+        })}
       >
-        Start Continous
-      </button>{" "}
-      <button onClick={SpeechRecognition.stopListening}>Stop</button>
-      <br />
-      <button onClick={resetTranscript}>Clear</button>
+        <img src={!startListening ? micoff : micon} alt="mic" width="25px" />
+      </button>
     </div>
   );
 };
